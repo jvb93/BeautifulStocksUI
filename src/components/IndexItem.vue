@@ -1,23 +1,15 @@
 <template>
 <div>
-    <h1 class="font-oswald-light">{{current}}</h1>
-    <p>{{symbol}}</p>
+    <h1 class="font-oswald-light">{{item.latestPrice}}</h1>
+    <p>{{item.symbol}}</p>
 </div>
 </template>
 
 <script>
 export default{
     props:{
-        current:{
-            type: Number,
-            required: true
-        },
-        last:{
-            type: Number,
-            required: true
-        },
-        symbol:{
-            type: String,
+        item:{
+            type: Object,
             required: true
         }
     }

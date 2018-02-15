@@ -4,22 +4,33 @@
       <div class="col">
         <h1>Indices</h1>
         <ul class="list-group list-group-flush">
-            <li class="list-group-item"><index-item :current="getCloseAtKey(INX, 0)" :last="getCloseAtKey(INX, 1)" :symbol="'INX'"></index-item></li>
-            <li class="list-group-item"><index-item :current="getCloseAtKey(DJI, 0)" :last="getCloseAtKey(DJI, 1)" :symbol="'DJI'"></index-item></li>
-            <li class="list-group-item"><index-item :current="getCloseAtKey(IXIC, 0)" :last="getCloseAtKey(IXIC, 1)" :symbol="'IXIC'"></index-item></li>
+            <li class="list-group-item"><index-item :item="SPY"></index-item></li>
+            <li class="list-group-item"><index-item :item="QQQ"></index-item></li>
+            <li class="list-group-item"><index-item :item="DIA"></index-item></li>
+        
         </ul>
-      
+        <div v-if="!modalShown" class="fixed-bottom w-25">
+          <div class="input-group">
+            <input type="text" class="form-control" v-on:keyup.enter="showModal(selectedSymbol)" v-model="selectedSymbol">
+            <div class="input-group-append">
+              <button class="btn btn-secondary" @click="showModal(selectedSymbol)" type="button">Look Up</button>
+            </div>
+          </div>
+           
+            
+        </div>
+    
       </div>
       <div class="col">
       </div> 
       <div class="col">
         <h1>Trending</h1>
         <ul class="list-group list-group-flush">
-            <li @click="showModal(symbol)" class="list-group-item " v-for="(symbol, index) in trendingSymbols" :key="index">{{symbol.symbol}}</li>
+            <li @click="showModal(symbol.symbol)" class="list-group-item " v-for="(symbol, index) in trendingSymbols" :key="index">{{symbol.symbol}}</li>
         </ul>
       </div> 
     </div>
-    <modal name="stock-modal" :height="'auto'" :width="'60%'">
+    <modal name="stock-modal" :height="'auto'" :width="'60%'" @opened="modalShown = true" @closed="modalShown = false">
       <stock-display :symbol="selectedSymbol"></stock-display>
     </modal>
   </div>
@@ -32,10 +43,11 @@ export default {
   data () {
     return {
      trendingSymbols: [],
-     INX:{},
-     DJI:{},
-     IXIC:{},
-     selectedSymbol:{}
+     SPY:{},
+     QQQ:{},
+     DIA:{},
+     selectedSymbol:"",
+     modalShown:false
     }
   },
   components:{
@@ -54,44 +66,24 @@ export default {
         }, response => {
       })
     },
-    getINX: function () {
-      this.$http.get("https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=INX&interval=1min&apikey=" + localStorage.getItem("alphaVantageApiKey"))
+    getQuote: function (symbol) {
+      return new Promise(resolve => {
+        this.$http.get("https://api.iextrading.com/1.0/stock/"+symbol+"/batch?types=quote&range=1d&last=10")
           .then(response => {
-              this.INX = response.data["Time Series (1min)"]          
+             resolve(response.body.quote);
           })      
+      });
+    
     },
-    getDJI: function () {
-      this.$http.get("https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=DJI&interval=1min&apikey=" + localStorage.getItem("alphaVantageApiKey"))
-          .then(response => {
-              this.DJI = response.data["Time Series (1min)"]          
-          })      
-    },
-    getIXIC: function () {
-      this.$http.get("https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=IXIC&interval=1min&apikey=" + localStorage.getItem("alphaVantageApiKey"))
-          .then(response => {
-              this.IXIC = response.data["Time Series (1min)"]          
-          })      
-    },
-    getCloseAtKey: function (timeSeries, key) {
-        if (typeof timeSeries[Object.keys(timeSeries)[key]] === 'undefined' || typeof timeSeries[Object.keys(timeSeries)[key]]["4. close"] === 'undefined') {
-            return 0;
-        }
-        return parseFloat(timeSeries[Object.keys(timeSeries)[key]]["4. close"]);
-    }
   }, 
-  mounted(){
-    if(!localStorage.getItem("alphaVantageApiKey")){
-        var key = prompt("Please enter your Alpha Vantage API Key");
-        if(key!=null)
-        {
-          localStorage.setItem("alphaVantageApiKey", key);
-         
-        }
-    }
+  mounted: async function(){
     this.getTrendingSymbols();
-    this.getINX();
-    this.getDJI();
-    this.getIXIC();
+    
+    this.SPY = await this.getQuote("SPY");
+    this.QQQ = await this.getQuote("QQQ");
+    this.DIA = await this.getQuote("DIA");
+  
+
   }
 }
 </script>

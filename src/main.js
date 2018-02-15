@@ -10,8 +10,16 @@ import VModal from 'vue-js-modal'
 import VueHighcharts from 'vue-highcharts'
 import lodash from 'lodash'
 import VueLodash from 'vue-lodash'
+import VueTimeago from 'vue-timeago'
 
-
+Vue.use(VueTimeago, {
+  name: 'timeago', // component name, `timeago` by default
+  locale: 'en-US',
+  locales: {
+    // you will need json-loader in webpack 1
+    'en-US': require('vue-timeago/locales/en-US.json')
+  }
+})
 Vue.use(VueLodash, lodash)
 Vue.use(VueHighcharts);
 Vue.use(VModal)
