@@ -1,6 +1,11 @@
 <template>
     <div class="card" style="background-color: #2C2F33; height:100%;">
+        
+      
          <div class="card-body">
+            <button type="button" @click="$modal.hide('stock-modal')" class="close float-right" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
             <h1 class="card-title text-center">{{symbol.toUpperCase()}}</h1>
             <h6 class="card-subtitle mb-2 text-muted text-center">{{stockData.quote.companyName}}</h6>
             <h4 class="card-text text-center">${{stockData.quote.latestPrice}}</h4>
