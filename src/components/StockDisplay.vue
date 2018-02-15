@@ -26,30 +26,28 @@
                         
                     </div>
                     <div class="row">
-                            <div class="col">
-                                <h5>52wk. Hi</h5>
-                                <p>{{stockData.quote.week52High}}</p>
-                            </div>
-                            <div class="col">
-                                <h5>52wk. Lo</h5>
-                                <p>{{stockData.quote.week52Low}}</p>
-                            </div>
-                            <div class="col">
-                                <h5>Mkt. Cap</h5>
-                                <p>{{intToString(stockData.quote.marketCap)}}</p>
-                            </div>
+                        <div class="col">
+                            <h5>52wk. Hi</h5>
+                            <p>{{stockData.quote.week52High}}</p>
                         </div>
-                </div>
-                <div class="col">
-                    <h4>News</h4>
-                    <ul class="list-group list-group-flush">
-                        <li class="list-group-item" v-for="(news, index) in stockData.news" :key="index"><small class="text-muted">[<timeago :since="news.datetime"></timeago>]</small> <a class="text-light" :href="news.url" target="_blank">{{news.headline}}</a></li>
-                    </ul>
+                        <div class="col">
+                            <h5>52wk. Lo</h5>
+                            <p>{{stockData.quote.week52Low}}</p>
+                        </div>
+                        <div class="col">
+                            <h5>Mkt. Cap</h5>
+                            <p>{{intToString(stockData.quote.marketCap)}}</p>
+                        </div>
+                    </div>
+                   
+                        
                 </div>
             </div>
-           
-            
-            <hr/>
+            <hr/> 
+            <h4>News</h4>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item" v-for="(news, index) in stockData.news" :key="index"><small class="text-muted">[<timeago :since="news.datetime"></timeago>]</small> <a class="text-light" :href="news.url" target="_blank">{{news.headline}}</a></li>
+            </ul>
             
                         
         </div>

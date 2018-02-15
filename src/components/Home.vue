@@ -30,7 +30,7 @@
         </ul>
       </div> 
     </div>
-    <modal :scrollable="true" name="stock-modal" :height="'auto'" :width="'60%'" @opened="modalShown = true" @closed="modalShown = false">
+    <modal :scrollable="true"  name="stock-modal" :height="'auto'" :adaptive="true" @opened="modalShown = true" @closed="modalShown = false">
       <stock-display :symbol="selectedSymbol"></stock-display>
     </modal>
   </div>
