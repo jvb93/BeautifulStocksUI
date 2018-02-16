@@ -24,10 +24,10 @@ export default{
             {
                 if(this.item.change_percentage < 0)
                 {
-                    toReturn['text-success'] = true;
+                    toReturn['text-danger'] = true;
                 }
                 else{
-                    toReturn['text-danger'] = true;
+                    toReturn['text-success'] = true;
                 }
             }
 
