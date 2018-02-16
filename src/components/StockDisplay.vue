@@ -8,7 +8,7 @@
             </button>
             <h1 class="card-title text-center">{{symbol.toUpperCase()}}</h1>
             <h6 class="card-subtitle mb-2 text-muted text-center">{{stockData.quote.companyName}}</h6>
-            <h4 class="card-text text-center">${{stockData.quote.latestPrice}} <small :class="{'text-success' : stockData.quote.changePercent >=0, 'text-danger' : stockData.quote.changePercent <0 }" >({{stockData.quote.changePercent.toFixed(2)}}%)</small> </h4>
+            <h4 class="card-text text-center">${{stockData.quote.latestPrice}} <small :class="{'text-success' : stockData.quote.changePercent >=0, 'text-danger' : stockData.quote.changePercent < 0 }" >({{(stockData.quote.changePercent*100).toFixed(2)}}%)</small> </h4>
             <hr/>
             <highcharts :options="chartOptions"></highcharts>
             <hr/>
@@ -53,12 +53,16 @@
                 <li class="nav-item">
                     <a class="nav-link active text-light" id="news-tab" data-toggle="tab" href="#news" role="tab" aria-controls="news" aria-selected="true">News</a>
                 </li>
+                 <li class="nav-item">
+                    <a class="nav-link text-light" id="company-info-tab" data-toggle="tab" href="#company-info" role="tab" aria-controls="company-info" aria-selected="false">Company Info</a>
+                </li>
                 <li class="nav-item">
                     <a class="nav-link text-light" id="options-tab" data-toggle="tab" href="#options" role="tab" aria-controls="options" aria-selected="false">Options</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link text-light" id="stock-twits-tab" data-toggle="tab" href="#stock-twits" role="tab" aria-controls="stock-twits" aria-selected="false">StockTwits</a>
                 </li>
+               
                
             </ul>
             <div class="tab-content" id="myTabContent">
@@ -93,10 +97,14 @@
                         </table>
                     </div>                  
                 </div>
-                 <div class="tab-pane fade show active" id="stock-twits" role="tabpanel" aria-labelledby="stock-twits-tab">
+                <div class="tab-pane fade" id="stock-twits" role="tabpanel" aria-labelledby="stock-twits-tab">
                     <ul class="list-group list-group-flush">
                         <li class="list-group-item" v-for="(message, index) in stockTwits" :key="index"> <b>{{message.user.username}} </b><small class="text-muted">[<timeago :since="message.created_at"></timeago>]</small> <br/> {{message.body}}</li>
                     </ul>
+                </div>
+                 <div class="tab-pane fade" id="company-info" role="tabpanel" aria-labelledby="company-info-tab">
+                    <h2>{{companyInfo.companyName}}</h2>
+                    <p>{{companyInfo.description}}</p>
                 </div>
             
             </div>
@@ -119,7 +127,11 @@ export default{
     data: function(){    
         return {
             timeSeries:{},
-            stockData:{},
+            stockData:{
+                quote:{},
+                chart:{}
+            },
+            companyInfo:{},
             options:[],
             stockTwits:[]
             
@@ -133,10 +145,20 @@ export default{
                      
                 })      
         },
+        getCompanyInfo:function(){
+            this.$http.get("/iex/stock/"+this.symbol+"/company")
+                .then(response => {
+                    this.companyInfo = response.data;      
+                     
+                })      
+        },
          getOptions:function(){        
             this.$http.get("/tradier/markets/options/chains?symbol="+this.symbol+"&expiration=" + this.getNextDayOfWeek(new Date(), 5))
                 .then(response => {
-                    this.options = response.data.options.option;      
+                    if(response.data.options)
+                    {
+                        this.options = response.data.options.option;
+                    }
                      
                 })      
         },
@@ -169,7 +191,6 @@ export default{
                     toReturn.push([stockDataChartRef[x].label, stockDataChartRef[x].marketAverage])
                 }
             }
-            console.log(toReturn);
             return toReturn;
         },
         chartOptions: function(){
@@ -232,6 +253,7 @@ export default{
         this.getStockData();
         this.getOptions();
         this.getStockTwits();
+        this.getCompanyInfo();
     }
 }
 </script>

@@ -1,6 +1,6 @@
 <template>
 <div>
-    <h1  :class="{'display-3' : true, 'font-oswald-light' : true, 'text-danger': item.change_percentage < 0, 'text-success' : item.change_percentage >=0 }">{{item.last}} <small>({{item.change_percentage.toFixed(2)}}%)</small></h1>
+    <h1 :class="contextualClasses">{{item.last}} <small>({{changePercentage.toFixed(2)}}%)</small></h1>
     <p>{{item.symbol}}</p>
 </div>
 </template>
@@ -11,6 +11,36 @@ export default{
         item:{
             type: Object,
             required: true
+        }
+    },
+    computed:{
+        contextualClasses: function(){
+            var toReturn = {
+                'display-3' : true,
+                'font-oswald-light' : true,
+            }
+
+            if(this.item.hasOwnProperty('change_percentage'))
+            {
+                if(this.item.change_percentage < 0)
+                {
+                    toReturn['text-success'] = true;
+                }
+                else{
+                    toReturn['text-danger'] = true;
+                }
+            }
+
+            return toReturn;
+        },
+        changePercentage:function(){
+            if(!this.item.hasOwnProperty('change_percentage'))
+            {
+                return 0;
+            }
+
+            return this.item.change_percentage;
+
         }
     }
 }
