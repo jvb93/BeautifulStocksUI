@@ -68,9 +68,9 @@ export default {
     },
     getQuote: function (symbol) {
       return new Promise(resolve => {
-        this.$http.get("https://api.iextrading.com/1.0/stock/"+symbol+"/batch?types=quote&range=1d&last=10")
+        this.$http.get("/tradier/markets/quotes?symbols=" + symbol)
           .then(response => {
-             resolve(response.body.quote);
+             resolve(response.body.quotes.quote);
           })      
       });
     

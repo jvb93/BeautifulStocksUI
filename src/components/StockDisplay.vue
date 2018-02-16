@@ -48,11 +48,57 @@
                         
                 </div>
             </div>
-            <hr/> 
-            <h4>News</h4>
-            <ul class="list-group list-group-flush">
-                <li class="list-group-item" v-for="(news, index) in stockData.news" :key="index"><small class="text-muted">[<timeago :since="news.datetime"></timeago>]</small> <a class="text-light" :href="news.url" target="_blank">{{news.headline}}</a></li>
+            <hr/>
+            <ul class="nav nav-tabs" id="myTab" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link active" id="news-tab" data-toggle="tab" href="#news" role="tab" aria-controls="news" aria-selected="true">News</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="options-tab" data-toggle="tab" href="#options" role="tab" aria-controls="options" aria-selected="false">Options</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="stock-twits-tab" data-toggle="tab" href="#stock-twits" role="tab" aria-controls="stock-twits" aria-selected="false">StockTwits</a>
+                </li>
+               
             </ul>
+            <div class="tab-content" id="myTabContent">
+                <div class="tab-pane fade show active" id="news" role="tabpanel" aria-labelledby="news-tab">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item" v-for="(news, index) in stockData.news" :key="index"><small class="text-muted">[<timeago :since="news.datetime"></timeago>]</small> <a class="text-light" :href="news.url" target="_blank">{{news.headline}}</a></li>
+                    </ul>
+                </div>
+                <div class="tab-pane fade" id="options" role="tabpanel" aria-labelledby="options-tab">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Expiration</th>
+                                <th>Strike</th>
+                                <th>Type</th>
+                                <th>Bid</th>
+                                <th>Ask</th>
+                                <th>Open Interest</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="(option, index) in _.orderBy(options, ['open_interest'], ['desc'])" :key="index">
+                                <td>{{option.expiration_date}}</td>
+                                <td>{{option.strike}}</td>
+                                <td>{{option.option_type}}</td>
+                                <td>{{option.bid}}</td>
+                                <td>{{option.ask}}</td>
+                                <td>{{option.open_interest}}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                 <div class="tab-pane fade show active" id="stock-twits" role="tabpanel" aria-labelledby="stock-twits-tab">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item" v-for="(message, index) in stockTwits" :key="index"><small class="text-muted">[<timeago :since="message.created_at"></timeago>]</small> {{message.body}} - {{message.user.username}}</li>
+                    </ul>
+                </div>
+            
+            </div>
+            
             
                         
         </div>
@@ -72,20 +118,41 @@ export default{
         return {
             timeSeries:{},
             stockData:{},
+            options:[],
+            stockTwits:[]
             
         }
     },
     methods:{
         getStockData:function(){
-            this.$http.get("https://api.iextrading.com/1.0/stock/"+this.symbol+"/batch?types=quote,news,chart&range=1d&last=10")
+            this.$http.get("/iex/stock/"+this.symbol+"/batch?types=quote,news,chart&range=1d&last=10")
                 .then(response => {
                     this.stockData = response.data;      
                      
                 })      
         },
+         getOptions:function(){        
+            this.$http.get("/tradier/markets/options/chains?symbol="+this.symbol+"&expiration=" + this.getNextDayOfWeek(new Date(), 5))
+                .then(response => {
+                    this.options = response.data.options.option;      
+                     
+                })      
+        },
+        getStockTwits:function(){        
+           this.$http.jsonp('https://api.stocktwits.com/api/2/streams/symbol/'+this.symbol+'.json').then(response => {
+                this.stockTwits = response.body.messages;
+                }, response => {
+            })
+        },
         intToString:function(value) {
             var numAbbr = new NumAbbr()
             return numAbbr.abbreviate(value, 2);
+        },
+        getNextDayOfWeek: function(date, dayOfWeek) {
+            
+            var resultDate = new Date(date.getTime());
+            resultDate.setDate(date.getDate() + (7 + dayOfWeek - date.getDay()) % 7);
+            return resultDate;
         }
     },
     computed:{
@@ -95,7 +162,10 @@ export default{
             var stockDataChartRef = this.stockData.chart;
             for(var x = 0; x < stockDataChartRef.length; x++)
             {
-                toReturn.push([stockDataChartRef[x].label, stockDataChartRef[x].marketAverage])
+                if(stockDataChartRef[x].marketAverage)
+                {
+                    toReturn.push([stockDataChartRef[x].label, stockDataChartRef[x].marketAverage])
+                }
             }
             console.log(toReturn);
             return toReturn;
@@ -158,6 +228,8 @@ export default{
     },
     mounted(){
         this.getStockData();
+        this.getOptions();
+        this.getStockTwits();
     }
 }
 </script>
