@@ -12,6 +12,8 @@ import lodash from 'lodash'
 import VueLodash from 'vue-lodash'
 import VueTimeago from 'vue-timeago'
 import Shortkey from 'vue-shortkey'
+import Vuebar from 'vuebar';
+Vue.use(Vuebar);
 Vue.use(Shortkey)
 Vue.use(VueTimeago, {
   name: 'timeago', // component name, `timeago` by default

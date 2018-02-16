@@ -21,10 +21,15 @@
       <div class="col">
       </div> 
       <div class="col">
-        <h1>Trending</h1>
-        <ul class="list-group list-group-flush">
-            <li @click="showModal(symbol.symbol)" class="list-group-item" style="cursor:pointer" v-for="(symbol, index) in trendingSymbols" :key="index">{{symbol.symbol}}</li>
-        </ul>
+        <h1>Trending</h1>   
+        <div v-bar style="height:70vh;">
+          <div>
+            <ul class="list-group list-group-flush">
+              <li @click="showModal(symbol.symbol)" class="list-group-item" style="cursor:pointer" v-for="(symbol, index) in trendingSymbols" :key="index">{{symbol.symbol}}</li>
+            </ul>
+          </div>    
+        </div>
+        
       </div> 
     </div>
     <modal :scrollable="true"  name="stock-modal" :height="'auto'" :width="'100%'" @opened="quoteModalShown = true" @closed="quoteModalShown = false">
