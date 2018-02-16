@@ -10,27 +10,7 @@ module.exports = {
     // Paths
     assetsSubDirectory: 'static',
     assetsPublicPath: '/',
-    proxyTable: {
-      '/iex': {
-        target: 'https://api.iextrading.com/1.0',
-        changeOrigin: true,
-        pathRewrite: {
-          '^/iex': ''
-        }
-      },
-      '/tradier': {
-        target: 'https://sandbox.tradier.com/v1',
-        changeOrigin: true,
-        pathRewrite: {
-          '^/tradier': ''
-        },
-        headers:{
-          "Authorization" : "Bearer " + process.env.TRADIER_API_KEY,
-          "Accept" : "application/json"
-        }
-      }
-
-    },
+    proxyTable: {},
 
     // Various Dev Server settings
     host: 'localhost', // can be overwritten by process.env.HOST

@@ -11,3 +11,5 @@ yarn-error.log*
 *.ntvs*
 *.njsproj
 *.sln
+
+build/webpack\.dev\.conf\.js
