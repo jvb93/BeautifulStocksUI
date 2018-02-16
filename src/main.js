@@ -11,7 +11,8 @@ import VueHighcharts from 'vue-highcharts'
 import lodash from 'lodash'
 import VueLodash from 'vue-lodash'
 import VueTimeago from 'vue-timeago'
-
+import Shortkey from 'vue-shortkey'
+Vue.use(Shortkey)
 Vue.use(VueTimeago, {
   name: 'timeago', // component name, `timeago` by default
   locale: 'en-US',

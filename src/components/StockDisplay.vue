@@ -8,7 +8,7 @@
             </button>
             <h1 class="card-title text-center">{{symbol.toUpperCase()}}</h1>
             <h6 class="card-subtitle mb-2 text-muted text-center">{{stockData.quote.companyName}}</h6>
-            <h4 class="card-text text-center">${{stockData.quote.latestPrice}}</h4>
+            <h4 class="card-text text-center">${{stockData.quote.latestPrice}} <small :class="{'text-success' : stockData.quote.changePercent >=0, 'text-danger' : stockData.quote.changePercent <0 }" >({{stockData.quote.changePercent.toFixed(2)}}%)</small> </h4>
             <hr/>
             <highcharts :options="chartOptions"></highcharts>
             <hr/>
@@ -51,13 +51,13 @@
             <hr/>
             <ul class="nav nav-tabs" id="myTab" role="tablist">
                 <li class="nav-item">
-                    <a class="nav-link active" id="news-tab" data-toggle="tab" href="#news" role="tab" aria-controls="news" aria-selected="true">News</a>
+                    <a class="nav-link active text-light" id="news-tab" data-toggle="tab" href="#news" role="tab" aria-controls="news" aria-selected="true">News</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" id="options-tab" data-toggle="tab" href="#options" role="tab" aria-controls="options" aria-selected="false">Options</a>
+                    <a class="nav-link text-light" id="options-tab" data-toggle="tab" href="#options" role="tab" aria-controls="options" aria-selected="false">Options</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" id="stock-twits-tab" data-toggle="tab" href="#stock-twits" role="tab" aria-controls="stock-twits" aria-selected="false">StockTwits</a>
+                    <a class="nav-link text-light" id="stock-twits-tab" data-toggle="tab" href="#stock-twits" role="tab" aria-controls="stock-twits" aria-selected="false">StockTwits</a>
                 </li>
                
             </ul>
@@ -67,33 +67,35 @@
                         <li class="list-group-item" v-for="(news, index) in stockData.news" :key="index"><small class="text-muted">[<timeago :since="news.datetime"></timeago>]</small> <a class="text-light" :href="news.url" target="_blank">{{news.headline}}</a></li>
                     </ul>
                 </div>
-                <div class="tab-pane fade" id="options" role="tabpanel" aria-labelledby="options-tab">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Expiration</th>
-                                <th>Strike</th>
-                                <th>Type</th>
-                                <th>Bid</th>
-                                <th>Ask</th>
-                                <th>Open Interest</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-for="(option, index) in _.orderBy(options, ['open_interest'], ['desc'])" :key="index">
-                                <td>{{option.expiration_date}}</td>
-                                <td>{{option.strike}}</td>
-                                <td>{{option.option_type}}</td>
-                                <td>{{option.bid}}</td>
-                                <td>{{option.ask}}</td>
-                                <td>{{option.open_interest}}</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <div class="tab-pane fade" id="options" role="tabpanel" aria-labelledby="options-tab" >
+                    <div class="table-responsive">
+                        <table class="table table-dark table-striped table-bordered table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Expiration</th>
+                                    <th>Strike</th>
+                                    <th>Type</th>
+                                    <th>Bid</th>
+                                    <th>Ask</th>
+                                    <th>Open Interest</th>
+                                </tr>
+                            </thead>
+                            <tbody >
+                                <tr v-for="(option, index) in _.orderBy(options, ['open_interest'], ['desc'])" :key="index">
+                                    <td>{{option.expiration_date}}</td>
+                                    <td>${{option.strike.toFixed(2)}}</td>
+                                    <td>{{option.option_type}}</td>
+                                    <td>${{option.bid.toFixed(2)}}</td>
+                                    <td>${{option.ask.toFixed(2)}}</td>
+                                    <td>{{option.open_interest}}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>                  
                 </div>
                  <div class="tab-pane fade show active" id="stock-twits" role="tabpanel" aria-labelledby="stock-twits-tab">
                     <ul class="list-group list-group-flush">
-                        <li class="list-group-item" v-for="(message, index) in stockTwits" :key="index"><small class="text-muted">[<timeago :since="message.created_at"></timeago>]</small> {{message.body}} - {{message.user.username}}</li>
+                        <li class="list-group-item" v-for="(message, index) in stockTwits" :key="index"> <b>{{message.user.username}} </b><small class="text-muted">[<timeago :since="message.created_at"></timeago>]</small> <br/> {{message.body}}</li>
                     </ul>
                 </div>
             

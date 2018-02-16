@@ -34,4 +34,13 @@ html, body{
   background-color: transparent !important;
 }
 
+.v--modal-overlay{
+  background: rgba(0, 0, 0, 0.7);
+}
+.nav-link.active,
+.nav-link.active:hover
+{
+  color:#23272A !important;
+}
+
 </style>

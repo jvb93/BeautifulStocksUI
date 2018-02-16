@@ -2,52 +2,62 @@
   <div>
     <div class="row">
       <div class="col">
-        <h1>Indices</h1>
-        <ul class="list-group list-group-flush">
-            <li class="list-group-item"><index-item :item="SPY"></index-item></li>
-            <li class="list-group-item"><index-item :item="QQQ"></index-item></li>
-            <li class="list-group-item"><index-item :item="DIA"></index-item></li>
-        
-        </ul>
-        <div v-if="!modalShown" class="fixed-bottom w-25">
-          <div class="input-group">
-            <input type="text" class="form-control" v-on:keyup.enter="showModal(selectedSymbol)" v-model="selectedSymbol">
-            <div class="input-group-append">
-              <button class="btn btn-secondary" @click="showModal(selectedSymbol)" type="button">Look Up</button>
-            </div>
-          </div>
-           
-            
+        <index-item :item="SPY"></index-item>
+      </div>
+      <div class="col">
+        <index-item :item="QQQ"></index-item>
+      </div>
+      <div class="col">
+        <index-item :item="DIA"></index-item>
+      </div>
+    </div>
+    <hr/>
+    <div class="row">
+      <div class="col">    
+        <div v-if="!lookupModalShown && !quoteModalShown" class="fixed-bottom w-25">
+          <button v-shortkey="['ctrl', 'q']"  @shortkey="showLookupModal()" @click="showLookupModal()" class="btn btn-secondary">lookup</button>         
         </div>
-    
       </div>
       <div class="col">
       </div> 
       <div class="col">
         <h1>Trending</h1>
         <ul class="list-group list-group-flush">
-            <li @click="showModal(symbol.symbol)" class="list-group-item " v-for="(symbol, index) in trendingSymbols" :key="index">{{symbol.symbol}}</li>
+            <li @click="showModal(symbol.symbol)" class="list-group-item" style="cursor:pointer" v-for="(symbol, index) in trendingSymbols" :key="index">{{symbol.symbol}}</li>
         </ul>
       </div> 
     </div>
-    <modal :scrollable="true"  name="stock-modal" :height="'auto'" :width="'100%'" @opened="modalShown = true" @closed="modalShown = false">
+    <modal :scrollable="true"  name="stock-modal" :height="'auto'" :width="'100%'" @opened="quoteModalShown = true" @closed="quoteModalShown = false">
       <stock-display :symbol="selectedSymbol"></stock-display>
+    </modal>
+     <modal :scrollable="true" name="lookup-modal" :height="'auto'" :width="'50%'" @opened="focusOnQuoteLookup" @closed="lookupModalShown = false">
+       <div class="card" style="background-color:#2C2F33;">
+         <div class="card-body">
+            <input class="form-control form-control-lg m5" id="quoteLookupInput" placeholder="Symbol" v-model="selectedSymbol" v-on:keyup.enter="showModal(selectedSymbol)" />
+         </div>
+         
+       </div>
+     
     </modal>
   </div>
 </template>
 <script>
 import IndexItem from './IndexItem'
 import StockDisplay from './StockDisplay'
+import $ from 'jquery'
+
 export default {
   name: 'Home',
   data () {
     return {
-     trendingSymbols: [],
-     SPY:{},
-     QQQ:{},
-     DIA:{},
-     selectedSymbol:"",
-     modalShown:false
+      trendingSymbols: [],
+      SPY:{},
+      QQQ:{},
+      DIA:{},
+      selectedSymbol:"",
+      lookupModalShown:false,
+      quoteModalShown:false,
+
     }
   },
   components:{
@@ -57,6 +67,7 @@ export default {
   methods:{
     showModal:function(symbol)
     {
+      this.$modal.hide('lookup-modal');
       this.selectedSymbol = symbol;
       this.$modal.show('stock-modal');
     },
@@ -75,6 +86,16 @@ export default {
       });
     
     },
+    focusOnQuoteLookup:function(){
+      $('#quoteLookupInput').focus()
+    },
+    showLookupModal:function()
+    {
+      this.selectedSymbol = "",
+      this.lookupModalShown = true;
+      this.$modal.show('lookup-modal');
+    
+    }
   }, 
   mounted: async function(){
     this.getTrendingSymbols();
