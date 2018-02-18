@@ -89,4 +89,8 @@ html, body{
 .vb.vb-dragging-phantom > .vb-dragger > .vb-dragger-styler {
     background-color: rgba(48, 121, 244,.5);
 }
+
+.card-dark{
+    background-color: #23272A;
+}
 </style>

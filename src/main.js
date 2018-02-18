@@ -13,6 +13,10 @@ import VueLodash from 'vue-lodash'
 import VueTimeago from 'vue-timeago'
 import Shortkey from 'vue-shortkey'
 import Vuebar from 'vuebar';
+import moment from "moment";
+import VueMomentJS from "vue-momentjs";
+ 
+Vue.use(VueMomentJS, moment);
 Vue.use(Vuebar);
 Vue.use(Shortkey)
 Vue.use(VueTimeago, {

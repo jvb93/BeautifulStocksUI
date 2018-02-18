@@ -72,30 +72,53 @@
                     </ul>
                 </div>
                 <div class="tab-pane fade" id="options" role="tabpanel" aria-labelledby="options-tab" >
-                    <div class="table-responsive">
-                        <table class="table table-dark table-striped table-bordered table-sm">
-                            <thead>
-                                <tr>
-                                    <th>Expiration</th>
-                                    <th>Strike</th>
-                                    <th>Type</th>
-                                    <th>Bid</th>
-                                    <th>Ask</th>
-                                    <th>Open Interest</th>
-                                </tr>
-                            </thead>
-                            <tbody >
-                                <tr v-for="(option, index) in _.orderBy(options, ['open_interest'], ['desc'])" :key="index">
-                                    <td>{{option.expiration_date}}</td>
-                                    <td>${{option.strike.toFixed(2)}}</td>
-                                    <td>{{option.option_type}}</td>
-                                    <td>${{option.bid.toFixed(2)}}</td>
-                                    <td>${{option.ask.toFixed(2)}}</td>
-                                    <td>{{option.open_interest}}</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>                  
+                    <div class="card card-dark">
+                        <div class="card-header">Options Chain</div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col">
+                                    <div class="form-horizontal">
+                                        <div class="form-group row">
+                                            <label class="col-sm-2 col-form-label">Expration Date</label>
+                                            <div class="col-sm-10">
+                                                <input type="date" class="form-control" v-model="expirationDate" @change="getOptions()"/>
+                                            </div>
+                                        </div>                                  
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col">
+                                     <div class="table-responsive">
+                                        <table class="table table-dark table-striped table-bordered table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th>Expiration</th>
+                                                    <th>Strike</th>
+                                                    <th>Type</th>
+                                                    <th>Bid</th>
+                                                    <th>Ask</th>
+                                                    <th>Open Interest</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody >
+                                                <tr v-for="(option, index) in _.orderBy(options, ['open_interest'], ['desc'])" :key="index">
+                                                    <td>{{option.expiration_date}}</td>
+                                                    <td>${{option.strike.toFixed(2)}}</td>
+                                                    <td>{{option.option_type}}</td>
+                                                    <td>${{option.bid.toFixed(2)}}</td>
+                                                    <td>${{option.ask.toFixed(2)}}</td>
+                                                    <td>{{option.open_interest}}</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>    
+                                </div>
+                            </div>
+                           
+                        </div>
+                    </div> 
+                                  
                 </div>
                 <div class="tab-pane fade" id="stock-twits" role="tabpanel" aria-labelledby="stock-twits-tab">
                     <ul class="list-group list-group-flush">
@@ -133,27 +156,28 @@ export default{
             },
             companyInfo:{},
             options:[],
-            stockTwits:[]
+            stockTwits:[],
+            expirationDate:""
             
         }
     },
     methods:{
         getStockData:function(){
-            this.$http.get("/iex/stock/"+this.symbol+"/batch?types=quote,news,chart&range=1d&last=10")
+            this.$http.get("https://api.iextrading.com/1.0/stock/"+this.symbol+"/batch?types=quote,news,chart&range=1d&last=10")
                 .then(response => {
                     this.stockData = response.data;      
                      
                 })      
         },
         getCompanyInfo:function(){
-            this.$http.get("/iex/stock/"+this.symbol+"/company")
+            this.$http.get("https://api.iextrading.com/1.0/stock/"+this.symbol+"/company")
                 .then(response => {
                     this.companyInfo = response.data;      
                      
                 })      
         },
          getOptions:function(){        
-            this.$http.get("/tradier/markets/options/chains?symbol="+this.symbol+"&expiration=" + this.getNextDayOfWeek(new Date(), 5))
+            this.$http.get("/tradier/markets/options/chains?symbol="+this.symbol+"&expiration=" + this.expirationDate)
                 .then(response => {
                     if(response.data.options)
                     {
@@ -176,7 +200,7 @@ export default{
             
             var resultDate = new Date(date.getTime());
             resultDate.setDate(date.getDate() + (7 + dayOfWeek - date.getDay()) % 7);
-            return resultDate;
+            return this.$moment(resultDate).format("YYYY-MM-DD");
         }
     },
     computed:{
@@ -250,10 +274,12 @@ export default{
         }
     },
     mounted(){
+        this.expirationDate = this.getNextDayOfWeek(new Date(), 5);
         this.getStockData();
         this.getOptions();
         this.getStockTwits();
         this.getCompanyInfo();
+       
     }
 }
 </script>
