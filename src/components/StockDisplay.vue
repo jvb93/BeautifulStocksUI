@@ -67,9 +67,11 @@
             </ul>
             <div class="tab-content" id="myTabContent">
                 <div class="tab-pane fade show active" id="news" role="tabpanel" aria-labelledby="news-tab">
-                    <ul class="list-group list-group-flush">
-                        <li class="list-group-item" v-for="(news, index) in stockData.news" :key="index"><small class="text-muted">[<timeago :since="news.datetime"></timeago>]</small> <a class="text-light" :href="news.url" target="_blank">{{news.headline}}</a></li>
-                    </ul>
+                    <div class="card card-dark">
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item" v-for="(news, index) in stockData.news" :key="index"><small class="text-muted">[<timeago :since="news.datetime"></timeago>]</small> <a class="text-light" :href="news.url" target="_blank">{{news.headline}}</a></li>
+                        </ul>
+                    </div>
                 </div>
                 <div class="tab-pane fade" id="options" role="tabpanel" aria-labelledby="options-tab" >
                     <div class="card card-dark">
@@ -90,28 +92,7 @@
                             <div class="row">
                                 <div class="col">
                                      <div class="table-responsive">
-                                        <table class="table table-dark table-striped table-bordered table-sm">
-                                            <thead>
-                                                <tr>
-                                                    <th>Expiration</th>
-                                                    <th>Strike</th>
-                                                    <th>Type</th>
-                                                    <th>Bid</th>
-                                                    <th>Ask</th>
-                                                    <th>Open Interest</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody >
-                                                <tr v-for="(option, index) in _.orderBy(options, ['open_interest'], ['desc'])" :key="index">
-                                                    <td>{{option.expiration_date}}</td>
-                                                    <td>${{option.strike.toFixed(2)}}</td>
-                                                    <td>{{option.option_type}}</td>
-                                                    <td>${{option.bid.toFixed(2)}}</td>
-                                                    <td>${{option.ask.toFixed(2)}}</td>
-                                                    <td>{{option.open_interest}}</td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
+                                        <v-client-table :data="options" :columns="optionsColumns" :options="optionsTableOptions"></v-client-table>
                                     </div>    
                                 </div>
                             </div>
@@ -121,13 +102,18 @@
                                   
                 </div>
                 <div class="tab-pane fade" id="stock-twits" role="tabpanel" aria-labelledby="stock-twits-tab">
-                    <ul class="list-group list-group-flush">
-                        <li class="list-group-item" v-for="(message, index) in stockTwits" :key="index"> <b>{{message.user.username}} </b><small class="text-muted">[<timeago :since="message.created_at"></timeago>]</small> <br/> {{message.body}}</li>
-                    </ul>
+                    <div class="card card-dark">
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item" v-for="(message, index) in stockTwits" :key="index"> <b>{{message.user.username}} </b><small class="text-muted">[<timeago :since="message.created_at"></timeago>]</small> <br/> {{message.body}}</li>
+                        </ul>
+                    </div>        
                 </div>
                  <div class="tab-pane fade" id="company-info" role="tabpanel" aria-labelledby="company-info-tab">
-                    <h2>{{companyInfo.companyName}}</h2>
-                    <p>{{companyInfo.description}}</p>
+                     <div class="card card-dark">
+                        <h2>{{companyInfo.companyName}}</h2>
+                        <p>{{companyInfo.description}}</p>
+                     </div>
+                   
                 </div>
             
             </div>
@@ -140,6 +126,8 @@
 
 <script>
 var NumAbbr = require('number-abbreviate')
+var accounting = require('accounting-js')
+
 export default{
     props:{
         symbol:{
@@ -156,8 +144,57 @@ export default{
             },
             companyInfo:{},
             options:[],
+            optionsColumns:['expiration_date', 'strike', 'option_type', 'bid', 'ask', 'open_interest'],
             stockTwits:[],
-            expirationDate:""
+            expirationDate:"",
+            optionsTableOptions:{
+                orderBy:{
+                   column: 'open_interest',
+                   ascending: false
+                },
+                skin:"table table-dark table-striped table-bordered table-sm",
+                templates: {
+                    strike: function (h, row, index) {
+                        if(row.strike)
+                        {
+                            return accounting.formatMoney(row.strike);
+                        }
+
+                        return '-'
+                       
+                    },
+                    bid: function (h, row, index) {
+                        if(row.bid)
+                        {
+                            return accounting.formatMoney(row.bid);
+                        }
+
+                        return '-'
+                       
+                    },
+                    ask: function (h, row, index) {
+                        if(row.ask)
+                        {
+                            return accounting.formatMoney(row.ask);
+                        }
+
+                        return '-'
+                       
+                    },
+                    open_interest: function (h, row, index) {
+                        if(row.open_interest)
+                        {
+                            return accounting.formatNumber(row.open_interest, {
+                                precision : 0        
+                            });
+                        }
+
+                        return '-'
+                       
+                    }
+
+                }
+            }
             
         }
     },

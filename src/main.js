@@ -15,7 +15,9 @@ import Shortkey from 'vue-shortkey'
 import Vuebar from 'vuebar';
 import moment from "moment";
 import VueMomentJS from "vue-momentjs";
- 
+import {ClientTable} from 'vue-tables-2';
+
+Vue.use(ClientTable);
 Vue.use(VueMomentJS, moment);
 Vue.use(Vuebar);
 Vue.use(Shortkey)
