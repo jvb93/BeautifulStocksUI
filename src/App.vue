@@ -91,6 +91,10 @@ html, body{
 }
 
 .card-dark{
-    background-color: #23272A;
+    background-color: #23272A !important;
+}
+
+.v--modal{
+    background-color:transparent!important;
 }
 </style>
