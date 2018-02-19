@@ -20,8 +20,8 @@
             </li>
           </ul>
           <form class="form-inline mt-2 mt-md-0">
-            <input class="form-control mr-sm-2" placeholder="Symbol" aria-label="Search" type="text" v-model="selectedSymbol">
-            <button class="btn btn-outline-success my-2 my-sm-0" v-shortkey="['ctrl', 'q']" @shortkey="showLookupModal()" @click="showModal(selectedSymbol)" type="button">Lookup</button>
+            <input class="form-control mr-sm-2" placeholder="Symbol" aria-label="Search" type="text" v-on:keyup.enter="showModal(selectedSymbol)" v-model="selectedSymbol">
+            <button class="btn btn-outline-primary my-2 my-sm-0" v-shortkey="['ctrl', 'q']" @shortkey="showLookupModal()" @click="showModal(selectedSymbol)" type="button">Lookup</button>
           </form>
         </div>
       </nav>
