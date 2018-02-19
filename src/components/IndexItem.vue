@@ -1,7 +1,7 @@
 <template>
 <div>
-    <h1 :class="contextualClasses">{{item.last}} <small>({{changePercentage.toFixed(2)}}%)</small></h1>
-    <p>{{item.symbol}}</p>
+    <h3 :class="contextualClasses">{{item.symbol}} {{item.last}} <small>({{changePercentage.toFixed(2)}}%)</small></h3>
+    
 </div>
 </template>
 
@@ -16,7 +16,6 @@ export default{
     computed:{
         contextualClasses: function(){
             var toReturn = {
-                'display-3' : true,
                 'font-oswald-light' : true,
             }
 
