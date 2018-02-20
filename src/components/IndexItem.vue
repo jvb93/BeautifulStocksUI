@@ -1,7 +1,6 @@
 <template>
 <div>
-    <h3 :class="contextualClasses">{{item.symbol}} {{item.last}} <small>({{changePercentage.toFixed(2)}}%)</small></h3>
-    
+    <h3 :class="contextualClasses">{{item.current.symbol}} {{item.current.lastSalePrice}} <small>({{changePercentage.toFixed(2)}}%)</small></h3>  
 </div>
 </template>
 
@@ -11,36 +10,29 @@ export default{
         item:{
             type: Object,
             required: true
-        }
+        },
     },
     computed:{
         contextualClasses: function(){
             var toReturn = {
                 'font-oswald-light' : true,
             }
-
-            if(this.item.hasOwnProperty('change_percentage'))
-            {
-                if(this.item.change_percentage < 0)
-                {
-                    toReturn['text-danger'] = true;
-                }
-                else{
-                    toReturn['text-success'] = true;
-                }
+            
+            if(this.item.current.lastSalePrice >= this.item.last.lastSalePrice){
+                toReturn['text-success'] = true;
+            }
+            else{
+                toReturn['text-danger'] = true;
             }
 
             return toReturn;
         },
-        changePercentage:function(){
-            if(!this.item.hasOwnProperty('change_percentage'))
-            {
-                return 0;
-            }
-
-            return this.item.change_percentage;
-
+        changePercentage:function()
+        {
+            var difference = this.item.current.lastSalePrice - this.item.last.lastSalePrice;
+            return (difference / this.item.last.lastSalePrice) * 100;
         }
+        
     }
 }
 </script>

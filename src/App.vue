@@ -9,15 +9,10 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarCollapse">
           <ul class="navbar-nav mr-auto">
-            <li class="nav-item mx-5">
-                <index-item :item="SPY"></index-item>
-            </li>
-            <li class="nav-item mx-5">
-                <index-item :item="QQQ"></index-item>
-            </li>
-            <li class="nav-item mx-5">
-                <index-item :item="DIA"></index-item>
-            </li>
+            <li class="mx-5" v-for="(key, value) in tops" :key="value">
+              <index-item :item="key"></index-item>
+            </li> 
+
           </ul>
           <form class="form-inline mt-2 mt-md-0">
             <input class="form-control mr-sm-2" placeholder="Symbol" aria-label="Search" type="text" v-on:keyup.enter="showModal(selectedSymbol)" v-model="selectedSymbol">
@@ -46,13 +41,29 @@
 import IndexItem from './components/IndexItem'
 import StockDisplay from './components/StockDisplay'
 import $ from 'jquery'
+const url = 'https://ws-api.iextrading.com/1.0/tops'
+const socket = require('socket.io-client')(url)
+
+
+
 export default {
   name: 'App',
   data: function(){
       return {
-        SPY:{},
-        QQQ:{},
-        DIA:{},
+        tops:{
+          SPY:{
+            current:{},
+            last:{}
+          },
+          QQQ:{
+            current:{},
+            last:{}
+          },
+          DIA:{
+            current:{},
+            last:{}
+          },
+        },
         selectedSymbol:"",
         lookupModalShown:false,
         quoteModalShown:false,
@@ -91,9 +102,32 @@ export default {
     }, 
   },
   mounted: async function(){
-    this.SPY = await this.getQuote("SPY");
-    this.QQQ = await this.getQuote("QQQ");
-    this.DIA = await this.getQuote("DIA");
+    //this.SPY = await this.getQuote("SPY");
+   // this.QQQ = await this.getQuote("QQQ");
+    //this.DIA = await this.getQuote("DIA");
+    var indicesLastRef = this.indicesLast;
+    var indicesRef = this.indices;
+    socket.on('message', message => {
+      var messageObj = JSON.parse(message);
+      if(messageObj.symbol == 'SPY'){
+        this.tops.SPY.last = this.tops.SPY.current;
+        this.tops.SPY.current = messageObj;
+      }
+      else if(messageObj.symbol == 'DIA'){
+        this.tops.DIA.last = this.tops.DIA.current;
+        this.tops.DIA.current = messageObj;      
+      }
+      else if(messageObj.symbol == 'QQQ'){
+        this.tops.QQQ.last = this.tops.QQQ.current
+        this.tops.QQQ.current = messageObj;
+      }
+
+    })
+
+
+    socket.on('connect', () => {
+      socket.emit('subscribe', 'qqq,dia,spy');
+    })
   }
 }
 </script>
