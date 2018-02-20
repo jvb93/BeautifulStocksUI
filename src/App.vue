@@ -9,8 +9,14 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarCollapse">
           <ul class="navbar-nav mr-auto">
-            <li class="mx-5" v-for="(key, value) in tops" :key="value">
-              <index-item :item="key"></index-item>
+            <li class="mx-5">
+              <index-item :current="SPY" :open="SPYOpen" :symbol="'SPY'"></index-item>
+            </li> 
+            <li class="mx-5">
+              <index-item :current="QQQ" :open="QQQOpen" :symbol="'QQQ'"></index-item>
+            </li> 
+            <li class="mx-5">
+              <index-item :current="DIA" :open="DIAOpen" :symbol="'DIA'"></index-item>
             </li> 
 
           </ul>
@@ -41,7 +47,7 @@
 import IndexItem from './components/IndexItem'
 import StockDisplay from './components/StockDisplay'
 import $ from 'jquery'
-const url = 'https://ws-api.iextrading.com/1.0/tops'
+const url = 'https://ws-api.iextrading.com/1.0/last'
 const socket = require('socket.io-client')(url)
 
 
@@ -50,20 +56,13 @@ export default {
   name: 'App',
   data: function(){
       return {
-        tops:{
-          SPY:{
-            current:{},
-            last:{}
-          },
-          QQQ:{
-            current:{},
-            last:{}
-          },
-          DIA:{
-            current:{},
-            last:{}
-          },
-        },
+        SPYOpen: 0,
+        QQQOpen: 0,
+        DIAOpen: 0,
+        SPY: 0,
+        QQQ: 0,
+        DIA: 0,
+      
         selectedSymbol:"",
         lookupModalShown:false,
         quoteModalShown:false,
@@ -78,9 +77,9 @@ export default {
   methods:{
     getQuote: function (symbol) {
         return new Promise(resolve => {
-            this.$http.get("/tradier/markets/quotes?symbols=" + symbol)
+            this.$http.get("https://api.iextrading.com/1.0/stock/"+symbol+"/quote")
             .then(response => {
-                resolve(response.body.quotes.quote);
+                resolve(response.body.open);
             })      
         });
     },
@@ -102,24 +101,21 @@ export default {
     }, 
   },
   mounted: async function(){
-    //this.SPY = await this.getQuote("SPY");
-   // this.QQQ = await this.getQuote("QQQ");
-    //this.DIA = await this.getQuote("DIA");
-    var indicesLastRef = this.indicesLast;
-    var indicesRef = this.indices;
+    this.SPYOpen = await this.getQuote("SPY");
+    this.QQQOpen = await this.getQuote("QQQ");
+    this.DIAOpen = await this.getQuote("DIA");
+ 
     socket.on('message', message => {
       var messageObj = JSON.parse(message);
+      console.log(messageObj);
       if(messageObj.symbol == 'SPY'){
-        this.tops.SPY.last = this.tops.SPY.current;
-        this.tops.SPY.current = messageObj;
+        this.SPY = messageObj.price;
       }
       else if(messageObj.symbol == 'DIA'){
-        this.tops.DIA.last = this.tops.DIA.current;
-        this.tops.DIA.current = messageObj;      
+        this.DIA =  messageObj.price;      
       }
       else if(messageObj.symbol == 'QQQ'){
-        this.tops.QQQ.last = this.tops.QQQ.current
-        this.tops.QQQ.current = messageObj;
+        this.QQQ = messageObj.price;
       }
 
     })

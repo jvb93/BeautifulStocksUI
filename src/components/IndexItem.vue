@@ -1,16 +1,25 @@
 <template>
 <div>
-    <h3 :class="contextualClasses">{{item.current.symbol}} {{item.current.lastSalePrice}} <small>({{changePercentage.toFixed(2)}}%)</small></h3>  
+    <h3 :class="contextualClasses">{{symbol}} {{current}} <small>({{changePercentage.toFixed(2)}}%)</small></h3>  
 </div>
 </template>
 
 <script>
 export default{
     props:{
-        item:{
-            type: Object,
+        current:{
+            type: Number,
             required: true
         },
+        open:{
+            type:Number,
+            required:true
+        },
+        symbol:{
+            type:String,
+            required:true
+        }
+    
     },
     computed:{
         contextualClasses: function(){
@@ -18,7 +27,7 @@ export default{
                 'font-oswald-light' : true,
             }
             
-            if(this.item.current.lastSalePrice >= this.item.last.lastSalePrice){
+            if(this.current >= this.open){
                 toReturn['text-success'] = true;
             }
             else{
@@ -29,8 +38,12 @@ export default{
         },
         changePercentage:function()
         {
-            var difference = this.item.current.lastSalePrice - this.item.last.lastSalePrice;
-            return (difference / this.item.last.lastSalePrice) * 100;
+            if(!this.open)
+            {
+                return 0;
+            }
+            var difference = this.current - this.open;
+            return (difference / this.open) * 100;
         }
         
     }
