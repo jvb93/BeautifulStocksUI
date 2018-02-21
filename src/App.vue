@@ -107,7 +107,6 @@ export default {
  
     socket.on('message', message => {
       var messageObj = JSON.parse(message);
-      console.log(messageObj);
       if(messageObj.symbol == 'SPY'){
         this.SPY = messageObj.price;
       }

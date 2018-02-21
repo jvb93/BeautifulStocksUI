@@ -42,8 +42,8 @@ export default{
             {
                 return 0;
             }
-            var difference = this.current - this.open;
-            return (difference / this.open) * 100;
+           
+            return ((this.current - this.open) / parseFloat(this.open)) * 100;
         }
         
     }

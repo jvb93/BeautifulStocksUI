@@ -91,6 +91,10 @@
                             </div>
                             <div class="row">
                                 <div class="col">
+                                    <div class="progress" style="height:30px;">
+                                        <div class="progress-bar bg-success" role="progressbar" :style="{'width': callPercentage + '%'}" aria-valuenow="callPercentage" aria-valuemin="0" aria-valuemax="100">{{callPercentage.toFixed(0)}}% Calls</div>
+                                        <div class="progress-bar bg-danger" role="progressbar" :style="{'width': putPercentage + '%'}" aria-valuenow="putPercentage" aria-valuemin="0" aria-valuemax="100">{{putPercentage.toFixed(0)}}% Puts</div>
+                                    </div>
                                      <div class="table-responsive">
                                         <v-client-table :data="options" :columns="optionsColumns" :options="optionsTableOptions"></v-client-table>
                                     </div>    
@@ -253,6 +257,42 @@ export default{
                 }
             }
             return toReturn;
+        },
+        callCount:function(){
+            if(!this.options || !this.options.length)
+            {
+                return 0
+            }
+            return this._.sumBy(this.options, i => (i.option_type.toLowerCase() === 'call' ? i.open_interest : 0));
+        },
+        putCount:function(){
+            if(!this.options || !this.options.length)
+            {
+                return 0
+            }
+            return this._.sumBy(this.options, i => (i.option_type.toLowerCase() === 'put' ? i.open_interest : 0));
+        },    
+        callPercentage:function(){
+            var calls = this.callCount;
+            var total = calls + this.putCount;
+
+            if(total > 0 )
+            {
+                return (calls/total) * 100
+            }
+
+            return 0;
+        },
+        putPercentage:function(){
+            var puts = this.putCount;
+            var total = puts + this.callCount;
+
+            if(total > 0 )
+            {
+                return (puts/total) * 100
+            }
+
+            return 0;
         },
         chartOptions: function(){
             return {
