@@ -10,20 +10,20 @@
         <div class="collapse navbar-collapse" id="navbarCollapse">
           <ul class="navbar-nav mr-auto">
             <li class="mx-5">
-              <index-item :current="SPY" :open="SPYOpen" :symbol="'SPY'"></index-item>
+              <index-item :symbol="SPY"></index-item>
             </li> 
             <li class="mx-5">
-              <index-item :current="QQQ" :open="QQQOpen" :symbol="'QQQ'"></index-item>
+              <index-item :symbol="QQQ"></index-item>
             </li> 
             <li class="mx-5">
-              <index-item :current="DIA" :open="DIAOpen" :symbol="'DIA'"></index-item>
+              <index-item :symbol="DIA"></index-item>
             </li> 
 
           </ul>
-          <form class="form-inline mt-2 mt-md-0">
+          <div class="form-inline mt-2 mt-md-0">
             <input class="form-control mr-sm-2" placeholder="Symbol" aria-label="Search" type="text" v-on:keyup.enter="showModal(selectedSymbol)" v-model="selectedSymbol">
             <button class="btn btn-outline-primary my-2 my-sm-0" v-shortkey="['ctrl', 'q']" @shortkey="showLookupModal()" @click="showModal(selectedSymbol)" type="button">Lookup</button>
-          </form>
+          </div>
         </div>
       </nav>
     </header>
@@ -47,22 +47,16 @@
 import IndexItem from './components/IndexItem'
 import StockDisplay from './components/StockDisplay'
 import $ from 'jquery'
-const url = 'https://ws-api.iextrading.com/1.0/last'
-const socket = require('socket.io-client')(url)
-
-
 
 export default {
   name: 'App',
   data: function(){
       return {
-        SPYOpen: 0,
-        QQQOpen: 0,
-        DIAOpen: 0,
-        SPY: 0,
-        QQQ: 0,
-        DIA: 0,
       
+        SPY: {},
+        QQQ: {},
+        DIA: {},
+        refreshCount:120, // 10 minutes of refreshing
         selectedSymbol:"",
         lookupModalShown:false,
         quoteModalShown:false,
@@ -79,7 +73,7 @@ export default {
         return new Promise(resolve => {
             this.$http.get("https://api.iextrading.com/1.0/stock/"+symbol+"/quote")
             .then(response => {
-                resolve(response.body.open);
+                resolve(response.body);
             })      
         });
     },
@@ -98,31 +92,25 @@ export default {
       this.$modal.hide('lookup-modal'); 
       this.selectedSymbol = symbol; 
       this.$modal.show('stock-modal'); 
-    }, 
+    },
+    loadIndices: async function(){
+      console.log("refreshing indices: " + this.refreshCount);
+      this.SPY = await this.getQuote("SPY");
+      this.QQQ = await this.getQuote("QQQ");
+      this.DIA = await this.getQuote("DIA");
+    }  
   },
   mounted: async function(){
-    this.SPYOpen = await this.getQuote("SPY");
-    this.QQQOpen = await this.getQuote("QQQ");
-    this.DIAOpen = await this.getQuote("DIA");
- 
-    socket.on('message', message => {
-      var messageObj = JSON.parse(message);
-      if(messageObj.symbol == 'SPY'){
-        this.SPY = messageObj.price;
-      }
-      else if(messageObj.symbol == 'DIA'){
-        this.DIA =  messageObj.price;      
-      }
-      else if(messageObj.symbol == 'QQQ'){
-        this.QQQ = messageObj.price;
-      }
+    this.loadIndices();
 
-    })
-
-
-    socket.on('connect', () => {
-      socket.emit('subscribe', 'qqq,dia,spy');
-    })
+    var interval = setInterval(function () {
+      this.loadIndices();
+      this.refreshCount--;
+      if(this.refreshCount < 1)
+      {
+        clearInterval(interval);
+      }
+    }.bind(this), 5000); 
   }
 }
 </script>
@@ -137,11 +125,14 @@ html, body{
 }
 .font-oswald{ 
     font-family: 'Oswald', sans-serif !important;
+    font-size: 1.5rem !important;
+
 }
 
 .font-oswald-light{ 
     font-family: 'Oswald', sans-serif !important;
     font-weight: 200 !important;
+    font-size: 1.5rem !important;
 }
 
 .font-roboto{

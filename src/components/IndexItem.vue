@@ -1,22 +1,14 @@
 <template>
 <div>
-    <h3 :class="contextualClasses">{{symbol}} {{current}} <small>({{changePercentage.toFixed(2)}}%)</small></h3>  
+    <h3 :class="contextualClasses">{{symbol.symbol}} {{symbol.latestPrice}} <small>({{(symbol.changePercent *100 ).toFixed(2)}}%)</small></h3>  
 </div>
 </template>
 
 <script>
 export default{
     props:{
-        current:{
-            type: Number,
-            required: true
-        },
-        open:{
-            type:Number,
-            required:true
-        },
         symbol:{
-            type:String,
+            type:Object,
             required:true
         }
     

@@ -8,9 +8,21 @@
             </button>
             <h1 class="card-title text-center">{{symbol.toUpperCase()}}</h1>
             <h6 class="card-subtitle mb-2 text-muted text-center">{{stockData.quote.companyName}}</h6>
-            <h4 class="card-text text-center">${{stockData.quote.latestPrice}} <small :class="{'text-success' : stockData.quote.changePercent >=0, 'text-danger' : stockData.quote.changePercent < 0 }" >({{(stockData.quote.changePercent*100).toFixed(2)}}%)</small> </h4>
+            <h4 class="card-text text-center font-oswald-light">{{formatMoney(stockData.quote.latestPrice,2)}} <small :class="{'text-success' : stockData.quote.changePercent >=0, 'text-danger' : stockData.quote.changePercent < 0 }" > <br/>{{formatMoney(stockData.quote.change,2)}} ({{(stockData.quote.changePercent*100).toFixed(2)}}%)</small> </h4>
             <hr/>
-            <highcharts :options="chartOptions"></highcharts>
+            <div class="row">
+                <div class="col text-center">
+                    <highcharts :options="chartOptions"></highcharts>
+                    <div class="btn-group btn-group-sm" role="group" aria-label="Basic example">
+                        <button type="button" class="btn btn-secondary" @click="getChart('1d')">1D</button>
+                        <button type="button" class="btn btn-secondary" @click="getChart('1m')">1M</button>
+                        <button type="button" class="btn btn-secondary" @click="getChart('3m')">3M</button>
+                        <button type="button" class="btn btn-secondary" @click="getChart('1y')">1Y</button>
+                        <button type="button" class="btn btn-secondary" @click="getChart('5y')">5Y</button>                     
+                    </div>
+                </div>
+            </div>
+
             <hr/>
             <div class="row">
                 <div class="col">
@@ -18,30 +30,30 @@
                     <div class="row">
                         <div class="col">
                             <h5>Vol</h5>
-                            <p>{{intToString(stockData.quote.latestVolume)}}</p>
+                            <p class="font-oswald-light">{{abbreviateNumber(stockData.quote.latestVolume,2)}}</p>
                         </div>
                         <div class="col">
                             <h5>Avg. Vol</h5>
-                            <p>{{intToString(stockData.quote.avgTotalVolume)}}</p>
+                            <p class="font-oswald-light">{{abbreviateNumber(stockData.quote.avgTotalVolume,2)}}</p>
                         </div>
                         <div class="col">
                             <h5>P/E</h5>
-                            <p>{{stockData.quote.peRatio}}</p>
+                            <p class="font-oswald-light">{{stockData.quote.peRatio}}</p>
                         </div>
                         
                     </div>
                     <div class="row">
                         <div class="col">
                             <h5>52wk. Hi</h5>
-                            <p>{{stockData.quote.week52High}}</p>
+                            <p class="font-oswald-light">{{formatMoney(stockData.quote.week52High,2)}}</p>
                         </div>
                         <div class="col">
                             <h5>52wk. Lo</h5>
-                            <p>{{stockData.quote.week52Low}}</p>
+                            <p class="font-oswald-light">{{formatMoney(stockData.quote.week52Low,2)}}</p>
                         </div>
                         <div class="col">
                             <h5>Mkt. Cap</h5>
-                            <p>{{intToString(stockData.quote.marketCap)}}</p>
+                            <p class="font-oswald-light">${{abbreviateNumber(stockData.quote.marketCap,2)}}</p>
                         </div>
                     </div>
                    
@@ -92,8 +104,8 @@
                             <div class="row">
                                 <div class="col">
                                     <div class="progress" style="height:30px;">
-                                        <div class="progress-bar bg-success" role="progressbar" :style="{'width': callPercentage + '%'}" aria-valuenow="callPercentage" aria-valuemin="0" aria-valuemax="100">{{callPercentage.toFixed(0)}}% Calls</div>
-                                        <div class="progress-bar bg-danger" role="progressbar" :style="{'width': putPercentage + '%'}" aria-valuenow="putPercentage" aria-valuemin="0" aria-valuemax="100">{{putPercentage.toFixed(0)}}% Puts</div>
+                                        <div class="progress-bar bg-success" role="progressbar" :style="{'width': callPercentage + '%'}" aria-valuenow="callPercentage" aria-valuemin="0" aria-valuemax="100" style="font-size:20px;">{{callPercentage.toFixed(0)}}% Calls</div>
+                                        <div class="progress-bar bg-danger" role="progressbar" :style="{'width': putPercentage + '%'}" aria-valuenow="putPercentage" aria-valuemin="0" aria-valuemax="100" style="font-size:20px;">{{putPercentage.toFixed(0)}}% Puts</div>
                                     </div>
                                      <div class="table-responsive">
                                         <v-client-table :data="options" :columns="optionsColumns" :options="optionsTableOptions"></v-client-table>
@@ -114,8 +126,18 @@
                 </div>
                  <div class="tab-pane fade" id="company-info" role="tabpanel" aria-labelledby="company-info-tab">
                      <div class="card card-dark">
-                        <h2>{{companyInfo.companyName}}</h2>
-                        <p>{{companyInfo.description}}</p>
+                        <div class="card-header">{{companyInfo.companyName}}</div>
+                        <div class="card-body">
+                            <h3>Bio</h3>
+                            <p>{{companyInfo.description}}</p>
+                            <h3>Website</h3>
+                            <a :href="companyInfo.website" target="_blank">{{companyInfo.website}}</a>
+                            <h3>Industry</h3>
+                            <p>{{companyInfo.industry}}</p>
+                            <h3>CEO</h3>
+                            <p>{{companyInfo.CEO}}</p>
+                        </div>
+                        
                      </div>
                    
                 </div>
@@ -144,8 +166,9 @@ export default{
             timeSeries:{},
             stockData:{
                 quote:{},
-                chart:{}
+                
             },
+            chart:{},
             companyInfo:{},
             options:[],
             optionsColumns:['expiration_date', 'strike', 'option_type', 'bid', 'ask', 'open_interest'],
@@ -204,7 +227,7 @@ export default{
     },
     methods:{
         getStockData:function(){
-            this.$http.get("https://api.iextrading.com/1.0/stock/"+this.symbol+"/batch?types=quote,news,chart&range=1d&last=10")
+            this.$http.get("https://api.iextrading.com/1.0/stock/"+this.symbol+"/batch?types=quote,news&range=1d&last=10")
                 .then(response => {
                     this.stockData = response.data;      
                      
@@ -217,15 +240,36 @@ export default{
                      
                 })      
         },
-         getOptions:function(){        
+        getChart:function(period)
+        {
+            this.$http.get("https://api.iextrading.com/1.0/stock/"+this.symbol+"/batch?types=chart&range=" + period)
+                .then(response => {
+                    this.chart = response.data.chart;      
+                     
+                })      
+        },
+        abbreviateNumber: function(value, decimals)
+        {
+            var numAbbr = new NumAbbr()
+            return numAbbr.abbreviate(value, decimals)
+        },
+        getOptions:function(){        
             this.$http.get("/tradier/markets/options/chains?symbol="+this.symbol+"&expiration=" + this.expirationDate)
                 .then(response => {
                     if(response.data.options)
                     {
                         this.options = response.data.options.option;
                     }
-                     
+                        
                 })      
+        },
+        formatNumber(value, decimals)
+        {
+            return accounting.formatNumber(value, { precision : decimals  });
+        },
+        formatMoney(value, decimals)
+        {
+            return accounting.formatMoney(value, { precision : decimals  });
         },
         getStockTwits:function(){        
            this.$http.jsonp('https://api.stocktwits.com/api/2/streams/symbol/'+this.symbol+'.json').then(response => {
@@ -233,10 +277,7 @@ export default{
                 }, response => {
             })
         },
-        intToString:function(value) {
-            var numAbbr = new NumAbbr()
-            return numAbbr.abbreviate(value, 2);
-        },
+       
         getNextDayOfWeek: function(date, dayOfWeek) {
             
             var resultDate = new Date(date.getTime());
@@ -245,15 +286,18 @@ export default{
         }
     },
     computed:{
-        chartData:function(){
-           
+        chartData:function(){        
             var toReturn =[]
-            var stockDataChartRef = this.stockData.chart;
+            var stockDataChartRef = this.chart;
             for(var x = 0; x < stockDataChartRef.length; x++)
             {
                 if(stockDataChartRef[x].marketAverage)
                 {
                     toReturn.push([stockDataChartRef[x].label, stockDataChartRef[x].marketAverage])
+                }
+                else if(stockDataChartRef[x].close)
+                {
+                    toReturn.push([stockDataChartRef[x].label, stockDataChartRef[x].close])
                 }
             }
             return toReturn;
@@ -295,6 +339,7 @@ export default{
             return 0;
         },
         chartOptions: function(){
+            var formatMoneyRef = this.formatMoney;
             return {
                 title: {
                     text: ''
@@ -313,7 +358,10 @@ export default{
                     visible:false
                 },
                 chart:{
-                    backgroundColor:'transparent'
+                    backgroundColor:'transparent',
+                    style:{
+                        'font-family': "'Oswald', sans-serif"
+                    }
                     
                 },
                 colors:["#7289DA", "FFF", "#99AAB5"],
@@ -323,6 +371,16 @@ export default{
                             connectorAllowed: false
                         },
                      
+                    }
+                },
+                tooltip:{
+                    
+                     formatter: function () {
+                        return '<b>' + formatMoneyRef(this.y,2)+ '</b> <br/><small>' + this.key +'</small>';
+                         
+                    },
+                    style:{
+                        fontSize :'20px'
                     }
                 },
                 legend:{
@@ -353,6 +411,7 @@ export default{
     mounted(){
         this.expirationDate = this.getNextDayOfWeek(new Date(), 5);
         this.getStockData();
+        this.getChart('1d');
         this.getOptions();
         this.getStockTwits();
         this.getCompanyInfo();
