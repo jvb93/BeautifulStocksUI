@@ -19,7 +19,7 @@ export default{
                 'font-oswald-light' : true,
             }
             
-            if(symbol.changePercentage >= 0){
+            if(this.symbol.changePercent >= 0){
                 toReturn['text-success'] = true;
             }
             else{
@@ -27,15 +27,6 @@ export default{
             }
 
             return toReturn;
-        },
-        changePercentage:function()
-        {
-            if(!this.open)
-            {
-                return 0;
-            }
-           
-            return ((this.current - this.open) / parseFloat(this.open)) * 100;
         }
         
     }
