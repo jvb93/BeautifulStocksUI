@@ -50,9 +50,6 @@ export default {
   }, 
   mounted: async function(){
     this.getTrendingSymbols();
-    
-  
-
   }
 }
 </script>

@@ -19,7 +19,7 @@ export default{
                 'font-oswald-light' : true,
             }
             
-            if(this.current >= this.open){
+            if(symbol.changePercentage >= 0){
                 toReturn['text-success'] = true;
             }
             else{
