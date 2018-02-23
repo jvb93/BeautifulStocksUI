@@ -91,11 +91,19 @@
                         <div class="card-body">
                             <div class="row">
                                 <div class="col">
-                                    <div class="form-horizontal">
-                                        <div class="form-group row">
-                                            <label class="col-sm-2 col-form-label">Expration Date</label>
-                                            <div class="col-sm-10">
-                                                <input type="date" class="form-control" v-model="expirationDate" @change="getOptions()"/>
+                                    <div>
+                                        <div class="form-row">
+                                            <div class="form-group col">
+                                                <label>Expiration Start</label>
+                                                <input type="date" :min="today" :max="maxStartDate" class="form-control" v-model="expirationStartDate"/>
+                                            </div>
+                                            <div class="form-group col">
+                                                <label>Expiration End</label>
+                                                <input type="date" :min="minEndDate" class="form-control" v-model="expirationEndDate"/>
+                                            </div>
+                                            <div class="form-group col">
+                                                <label>&nbsp;</label>
+                                                <button class="btn btn-primary form-control" @click="getOptions()">Get Options</button>
                                             </div>
                                         </div>                                  
                                     </div>
@@ -171,9 +179,10 @@ export default{
             chart:{},
             companyInfo:{},
             options:[],
-            optionsColumns:['expiration_date', 'strike', 'option_type', 'bid', 'ask', 'open_interest'],
+            optionsColumns:['expiration_date', 'strike', 'option_type','open_interest', 'bid', 'ask'],
             stockTwits:[],
-            expirationDate:"",
+            expirationStartDate:"",
+            expirationEndDate:"",
             optionsTableOptions:{
                 orderBy:{
                    column: 'open_interest',
@@ -253,21 +262,27 @@ export default{
             var numAbbr = new NumAbbr()
             return numAbbr.abbreviate(value, decimals)
         },
-        getOptions:function(){        
-            this.$http.get("/tradier/markets/options/chains?symbol="+this.symbol+"&expiration=" + this.expirationDate)
-                .then(response => {
-                    if(response.data.options)
-                    {
-                        this.options = response.data.options.option;
-                    }
-                        
-                })      
+        getOptions:function(){
+            var dates = this.allFridaysBetweenDates;      
+            this.options = [];
+            for(var x = 0; x < dates.length; x++)
+            {
+                this.$http.get("/tradier/markets/options/chains?symbol="+this.symbol+"&expiration=" + dates[x])
+                    .then(response => {
+                        if(response.data.options)
+                        {
+                            this.options = this.options.concat(response.data.options.option);
+                        }
+                            
+                    });      
+            }
+            
         },
-        formatNumber(value, decimals)
+        formatNumber: function(value, decimals)
         {
             return accounting.formatNumber(value, { precision : decimals  });
         },
-        formatMoney(value, decimals)
+        formatMoney: function(value, decimals)
         {
             return accounting.formatMoney(value, { precision : decimals  });
         },
@@ -309,6 +324,18 @@ export default{
             }
             return this._.sumBy(this.options, i => (i.option_type.toLowerCase() === 'call' ? i.open_interest : 0));
         },
+        today: function()
+        {
+            return this.$moment().format("YYYY-MM-DD");
+        },
+        maxStartDate: function()
+        {
+            return this.$moment(this.expirationEndDate).format("YYYY-MM-DD");
+        },
+        minEndDate: function()
+        {
+            return this.$moment(this.expirationStartDate).format("YYYY-MM-DD");
+        },
         putCount:function(){
             if(!this.options || !this.options.length)
             {
@@ -337,6 +364,29 @@ export default{
             }
 
             return 0;
+        },
+        allFridaysBetweenDates:function()
+        {
+            var start = this.$moment(this.expirationStartDate),
+            end   = this.$moment(this.expirationEndDate), 
+            day   = 5;  
+
+            var result = [];
+            var current = start.clone();
+
+            if(current.day() == day)
+            {
+                result.push(current.clone().format("YYYY-MM-DD"));
+            }
+            while (current.day(7 + day).isBefore(end)) {
+                result.push(current.clone().format("YYYY-MM-DD"));
+            }
+
+            if(end.day() == day && !end.isSame(start)) {
+                result.push(end.clone().format("YYYY-MM-DD"));
+            }
+
+            return result;
         },
         chartOptions: function(){
             var formatMoneyRef = this.formatMoney;
@@ -409,7 +459,8 @@ export default{
         }
     },
     mounted(){
-        this.expirationDate = this.getNextDayOfWeek(new Date(), 5);
+        this.expirationStartDate = this.getNextDayOfWeek(new Date(), 5);
+        this.expirationEndDate = this.expirationStartDate;
         this.getStockData();
         this.getChart('1d');
         this.getOptions();
