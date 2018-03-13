@@ -101,22 +101,34 @@
                                                 <label>Expiration End</label>
                                                 <input type="date" :min="minEndDate" class="form-control" v-model="expirationEndDate"/>
                                             </div>
+                                          
+                                        </div>  
+                                        <div class="form-row">
                                             <div class="form-group col">
-                                                <label>&nbsp;</label>
+                                                <label>Strike Min</label>
+                                                <input type="number" class="form-control" v-model="strikeMin"/>
+                                            </div>
+                                            <div class="form-group col">
+                                                <label>Strike Max</label>
+                                                <input type="number" class="form-control" v-model="strikeMax"/>
+                                            </div>
+                                          
+                                        </div>   
+                                        <div class="form-row">
+                                            <div class="form-group col">
                                                 <button class="btn btn-primary form-control" @click="getOptions()">Get Options</button>
                                             </div>
-                                        </div>                                  
+                                        </div>                               
                                     </div>
+                                </div>
+                                <div class="col">
+                                    <highcharts :options="optionsChartOptions"></highcharts>
                                 </div>
                             </div>
                             <div class="row">
                                 <div class="col">
-                                    <div class="progress" style="height:30px;">
-                                        <div class="progress-bar bg-success" role="progressbar" :style="{'width': callPercentage + '%'}" aria-valuenow="callPercentage" aria-valuemin="0" aria-valuemax="100" style="font-size:20px;">{{callPercentage.toFixed(0)}}% Calls</div>
-                                        <div class="progress-bar bg-danger" role="progressbar" :style="{'width': putPercentage + '%'}" aria-valuenow="putPercentage" aria-valuemin="0" aria-valuemax="100" style="font-size:20px;">{{putPercentage.toFixed(0)}}% Puts</div>
-                                    </div>
                                      <div class="table-responsive">
-                                        <v-client-table :data="options" :columns="optionsColumns" :options="optionsTableOptions"></v-client-table>
+                                        <v-client-table :data="optionsFilteredByStrikeRange" :columns="optionsColumns" :options="optionsTableOptions"></v-client-table>
                                     </div>    
                                 </div>
                             </div>
@@ -183,6 +195,8 @@ export default{
             stockTwits:[],
             expirationStartDate:"",
             expirationEndDate:"",
+            strikeMin:0,
+            strikeMax:0,
             optionsTableOptions:{
                 orderBy:{
                    column: 'open_interest',
@@ -318,11 +332,11 @@ export default{
             return toReturn;
         },
         callCount:function(){
-            if(!this.options || !this.options.length)
+            if(!this.optionsFilteredByStrikeRange || !this.optionsFilteredByStrikeRange.length)
             {
                 return 0
             }
-            return this._.sumBy(this.options, i => (i.option_type.toLowerCase() === 'call' ? i.open_interest : 0));
+            return this._.sumBy(this.optionsFilteredByStrikeRange, i => (i.option_type.toLowerCase() === 'call' ? i.open_interest : 0));
         },
         today: function()
         {
@@ -337,11 +351,11 @@ export default{
             return this.$moment(this.expirationStartDate).format("YYYY-MM-DD");
         },
         putCount:function(){
-            if(!this.options || !this.options.length)
+            if(!this.optionsFilteredByStrikeRange || !this.optionsFilteredByStrikeRange.length)
             {
                 return 0
             }
-            return this._.sumBy(this.options, i => (i.option_type.toLowerCase() === 'put' ? i.open_interest : 0));
+            return this._.sumBy(this.optionsFilteredByStrikeRange, i => (i.option_type.toLowerCase() === 'put' ? i.open_interest : 0));
         },    
         callPercentage:function(){
             var calls = this.callCount;
@@ -388,73 +402,133 @@ export default{
 
             return result;
         },
+        optionsFilteredByStrikeRange: function(){
+            if(this.strikeMin && this.strikeMax)
+            {
+                var min = this.strikeMin;
+                var max = this.strikeMax;
+                return this._.filter(this.options, function(option){
+                    return option.strike >= min && option.strike <= max;
+                })
+            }
+            return this.options;
+        },
         chartOptions: function(){
             var formatMoneyRef = this.formatMoney;
             return {
+                    title: {
+                        text: ''
+                    },
+
+                    subtitle: {
+                        text: ''
+                    },
+
+                    yAxis: {
+                        title: {
+                            text: ''
+                        }
+                    },
+                    xAxis: {
+                        visible:false
+                    },
+                    chart:{
+                        backgroundColor:'transparent',
+                        style:{
+                            'font-family': "'Oswald', sans-serif"
+                        }
+                        
+                    },
+                    colors:["#7289DA", "FFF", "#99AAB5"],
+                    plotOptions: {
+                        series: {
+                            label: {
+                                connectorAllowed: false
+                            },
+                        
+                        }
+                    },
+                    tooltip:{
+                        
+                        formatter: function () {
+                            return '<b>' + formatMoneyRef(this.y,2)+ '</b> <br/><small>' + this.key +'</small>';
+                            
+                        },
+                        style:{
+                            fontSize :'20px'
+                        }
+                    },
+                    legend:{
+                        enabled:false
+                    },
+                    series: [{
+                        name: 'Price',
+                        data:  this.chartData
+                    },],
+
+                    responsive: {
+                        rules: [{
+                            condition: {
+                                maxWidth: 500
+                            },
+                            chartOptions: {
+                                legend: {
+                                    layout: 'horizontal',
+                                    align: 'center',
+                                    verticalAlign: 'bottom'
+                                }
+                            }
+                        }]
+                    }
+                }
+            },
+        optionsChartOptions: function(){
+            var formatMoneyRef = this.formatMoney;
+            return {
+                chart: {
+                    plotBackgroundColor: null,
+                    plotBorderWidth: null,
+                    plotShadow: false,
+                    type: 'pie',
+                    backgroundColor:'transparent',
+                    style:{
+                        'font-family': "sans-serif"
+                    },
+                    height: 228
+                },
                 title: {
                     text: ''
                 },
-
-                subtitle: {
-                    text: ''
+                tooltip: {
+                    pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
                 },
-
-                yAxis: {
-                    title: {
-                        text: ''
-                    }
-                },
-                xAxis: {
-                    visible:false
-                },
-                chart:{
-                    backgroundColor:'transparent',
-                    style:{
-                        'font-family': "'Oswald', sans-serif"
-                    }
-                    
-                },
-                colors:["#7289DA", "FFF", "#99AAB5"],
+                colors:["#28a745", "#dc3545", "#99AAB5"],
                 plotOptions: {
-                    series: {
-                        label: {
-                            connectorAllowed: false
-                        },
-                     
+                    pie: {
+                        allowPointSelect: true,
+                        cursor: 'pointer',
+                        borderWidth: 0, 
+                        dataLabels: {
+                            enabled: true,
+                            format: '<b>{point.name}</b>: {point.percentage:.1f} %',
+                            style: {
+                                fontSize:"14px"
+                            },
+                            color: "white"
+                        }
                     }
-                },
-                tooltip:{
-                    
-                     formatter: function () {
-                        return '<b>' + formatMoneyRef(this.y,2)+ '</b> <br/><small>' + this.key +'</small>';
-                         
-                    },
-                    style:{
-                        fontSize :'20px'
-                    }
-                },
-                legend:{
-                    enabled:false
                 },
                 series: [{
-                    name: 'Price',
-                    data:  this.chartData
-                },],
-
-                responsive: {
-                    rules: [{
-                        condition: {
-                            maxWidth: 500
-                        },
-                        chartOptions: {
-                            legend: {
-                                layout: 'horizontal',
-                                align: 'center',
-                                verticalAlign: 'bottom'
-                            }
-                        }
+                    name: 'Open Interest',
+                    colorByPoint: true,
+                    data: [{
+                            name: 'Calls',
+                            y: this.callCount
+                        }, {
+                            name: 'Puts',
+                            y: this.putCount
+                        }]
                     }]
-                }
             }
         }
     },
