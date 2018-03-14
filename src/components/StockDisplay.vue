@@ -103,17 +103,7 @@
                                             </div>
                                           
                                         </div>  
-                                        <div class="form-row">
-                                            <div class="form-group col">
-                                                <label>Strike Min</label>
-                                                <input type="number" class="form-control" v-model="strikeMin"/>
-                                            </div>
-                                            <div class="form-group col">
-                                                <label>Strike Max</label>
-                                                <input type="number" class="form-control" v-model="strikeMax"/>
-                                            </div>
-                                          
-                                        </div>   
+                                       
                                         <div class="form-row">
                                             <div class="form-group col">
                                                 <button class="btn btn-primary form-control" @click="getOptions()">Get Options</button>
@@ -121,8 +111,10 @@
                                         </div>                               
                                     </div>
                                 </div>
-                                <div class="col">
+                                <div class="col text-center" v-if="options && options.length">
                                     <highcharts :options="optionsChartOptions"></highcharts>
+                                    <label>Strike Range</label>
+                                    <vue-slider ref="slider" :lazy="true" :interval="1" :min="strikeMin" :max="strikeMax" v-model="strikeRange"></vue-slider>
                                 </div>
                             </div>
                             <div class="row">
@@ -173,13 +165,17 @@
 <script>
 var NumAbbr = require('number-abbreviate')
 var accounting = require('accounting-js')
-
+import VueSlider from 'vue-slider-component'
+import Vue from 'vue'
 export default{
     props:{
         symbol:{
             type: String,
             required: true
         }
+    },
+    components:{
+        VueSlider
     },
     data: function(){    
         return {
@@ -188,6 +184,7 @@ export default{
                 quote:{},
                 
             },
+            
             chart:{},
             companyInfo:{},
             options:[],
@@ -195,8 +192,8 @@ export default{
             stockTwits:[],
             expirationStartDate:"",
             expirationEndDate:"",
-            strikeMin:0,
-            strikeMax:0,
+          
+            strikeRange:[],
             optionsTableOptions:{
                 orderBy:{
                    column: 'open_interest',
@@ -286,10 +283,29 @@ export default{
                         if(response.data.options)
                         {
                             this.options = this.options.concat(response.data.options.option);
+                           
+                         
+                            var vm = this;
+                            Vue.nextTick()
+                            .then(function () {
+                                var min = vm.strikeMin;
+                                var max = vm.strikeMax;
+                                if(min && max)
+                                {
+                                    vm.strikeRange.push(min);
+                                    vm.strikeRange.push(max);
+                                    vm.$forceUpdate();
+                                    vm.$refs.slider.refresh();
+                                    
+                                }
+                            })
                         }
                             
                     });      
             }
+           
+           
+          
             
         },
         formatNumber: function(value, decimals)
@@ -312,9 +328,37 @@ export default{
             var resultDate = new Date(date.getTime());
             resultDate.setDate(date.getDate() + (7 + dayOfWeek - date.getDay()) % 7);
             return this.$moment(resultDate).format("YYYY-MM-DD");
-        }
+        },
+       
     },
     computed:{
+        strikeMin: function(){
+            if(this.options && this.options.length)
+            {
+                var minStrike =  this._.minBy(this.options, function(option){
+                    return option.strike;
+                });
+                if(minStrike && minStrike.strike)
+                {
+                    return minStrike.strike;
+                }
+            }
+            return 0;
+        },
+        strikeMax: function(){
+            if(this.options && this.options.length)
+            {
+                var maxStrike =  this._.maxBy(this.options, function(option){
+                    return option.strike;
+                });
+
+                if(maxStrike && maxStrike.strike)
+                {
+                    return maxStrike.strike;
+                }
+            }
+            return 0;
+        },
         chartData:function(){        
             var toReturn =[]
             var stockDataChartRef = this.chart;
@@ -403,10 +447,10 @@ export default{
             return result;
         },
         optionsFilteredByStrikeRange: function(){
-            if(this.strikeMin && this.strikeMax)
+            if(this.strikeRange.length)
             {
-                var min = this.strikeMin;
-                var max = this.strikeMax;
+                var min = this.strikeRange[0];
+                var max = this.strikeRange[1];
                 return this._.filter(this.options, function(option){
                     return option.strike >= min && option.strike <= max;
                 })
@@ -541,6 +585,12 @@ export default{
         this.getStockTwits();
         this.getCompanyInfo();
        
+    },
+    updated() {
+        var vm = this;
+        this.$nextTick(function () {
+          vm.$refs.slider.refresh()
+        })
     }
 }
 </script>
