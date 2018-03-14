@@ -586,11 +586,5 @@ export default{
         this.getCompanyInfo();
        
     },
-    updated() {
-        var vm = this;
-        this.$nextTick(function () {
-          vm.$refs.slider.refresh()
-        })
-    }
 }
 </script>
